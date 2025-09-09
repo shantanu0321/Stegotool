@@ -71,16 +71,16 @@ Copy code
 
  Available Payloads
 
-| Payload Type       | Description                               | Emoji |
-|-------------------|-------------------------------------------|-------|
-| System Info        | OS, IP, hostname                          | 🧠    |
-| File Access        | Downloads folder, home directory walk     | 📂    |
-| Running Processes  | Lists all running system processes        | 📋    |
-| USB Detection      | Lists connected USB storage               | 💾    |
-| Screenshot         | Captures current screen and saves as PNG  | 🖼    |
-| EXIF Data          | Extracts metadata from images             | 🧬    |
-| Network Scan       | Scans local network for live hosts        | 🌐    |
-| Upload (Demo)      | Simulates sending data to your server     | 🚨    |
+| Payload Type       | Description                               | 
+|-------------------|--------------------------------------------|
+| System Info        | OS, IP, hostname                          |
+| File Access        | Downloads folder, home directory walk     | 
+| Running Processes  | Lists all running system processes        |
+| USB Detection      | Lists connected USB storage               | 
+| Screenshot         | Captures current screen and saves as PNG  | 
+| EXIF Data          | Extracts metadata from images             | 
+| Network Scan       | Scans local network for live hosts        | 
+| Upload (Demo)      | Simulates sending data to your server     | 
 ---
 
 ### 5. Run a Payload
