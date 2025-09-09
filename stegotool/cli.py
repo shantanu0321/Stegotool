@@ -1,45 +1,63 @@
 import argparse
-from stegotool.payload import (
-    system_info, file_access, list_processes,
-    detect_usb, take_screenshot, extract_exif,
-    network_scan, simulate_upload
-)
+import json
+from stegotool import payload
 
 def main():
-    parser = argparse.ArgumentParser(description="StegoTool - Demo Payload CLI")
-    subparsers = parser.add_subparsers(dest="command")
+    parser = argparse.ArgumentParser(
+        description="StegoTool v2 - Educational Payload Demonstration"
+    )
 
-    payload_parser = subparsers.add_parser("run-payload", help="Run demo payloads")
-    payload_parser.add_argument("--system", action="store_true", help="System info")
-    payload_parser.add_argument("--files", action="store_true", help="File access")
-    payload_parser.add_argument("--processes", action="store_true", help="Running processes")
-    payload_parser.add_argument("--usb", action="store_true", help="Detect USB devices")
-    payload_parser.add_argument("--screenshot", action="store_true", help="Take screenshot")
-    payload_parser.add_argument("--exif", type=str, help="Extract EXIF from image")
-    payload_parser.add_argument("--scan", action="store_true", help="Network scan")
-    payload_parser.add_argument("--upload", action="store_true", help="Simulate upload")
+    parser.add_argument(
+        "run_payload",
+        help="Specify the payload type to run",
+        choices=[
+            "system",
+            "files",
+            "processes",
+            "usb",
+            "screenshot",
+            "exif",
+            "scan",
+            "upload",
+        ],
+    )
+
+    parser.add_argument(
+        "--image",
+        help="Image path for EXIF data extraction (required for 'exif' payload)"
+    )
+
+    parser.add_argument(
+        "--data",
+        help="JSON string for upload simulation (required for 'upload' payload)"
+    )
 
     args = parser.parse_args()
 
-    if args.command == "run-payload":
-        if args.system:
-            system_info()
-        if args.files:
-            file_access()
-        if args.processes:
-            list_processes()
-        if args.usb:
-            detect_usb()
-        if args.screenshot:
-            take_screenshot()
-        if args.exif:
-            extract_exif(args.exif)
-        if args.scan:
-            network_scan()
-        if args.upload:
-            simulate_upload()
+    # Run selected payload
+    if args.run_payload == "exif":
+        if not args.image:
+            print("❌ Please provide --image for EXIF payload")
+            return
+        result = payload.exif_data(args.image)
+
+    elif args.run_payload == "upload":
+        if not args.data:
+            print("❌ Please provide --data for upload simulation")
+            return
+        try:
+            data = json.loads(args.data)
+        except json.JSONDecodeError:
+            print("❌ Invalid JSON format in --data")
+            return
+        result = payload.upload_simulation(data)
+
     else:
-        parser.print_help()
+        func = payload.PAYLOADS[args.run_payload]
+        result = func()
+
+    print(json.dumps(result, indent=4))
+
 
 if __name__ == "__main__":
     main()
