@@ -3,107 +3,110 @@ import platform
 import socket
 import subprocess
 import psutil
-import json
-import time
-from pathlib import Path
-from PIL import ImageGrab, ExifTags, Image
+import pyautogui
+from PIL import Image
+from PIL.ExifTags import TAGS
+import tempfile
 
-# ==========================
-#  Payload Implementations
-# ==========================
 
 def system_info():
-    """Collect basic system information"""
-    info = {
-        "os": platform.system(),
-        "os_version": platform.version(),
-        "platform": platform.platform(),
-        "hostname": socket.gethostname(),
-        "ip_address": socket.gethostbyname(socket.gethostname()),
-        "architecture": platform.machine(),
-        "processor": platform.processor(),
-    }
-    return info
+    return f"""
+OS: {platform.system()} {platform.release()}
+Version: {platform.version()}
+Hostname: {socket.gethostname()}
+IP Address: {socket.gethostbyname(socket.gethostname())}
+"""
 
 
 def file_access():
-    """List contents of Downloads folder and walk home directory"""
-    downloads = Path.home() / "Downloads"
-    home = Path.home()
+    downloads = os.path.join(os.path.expanduser("~"), "Downloads")
+    home = os.path.expanduser("~")
 
-    results = {
-        "downloads": [str(f) for f in downloads.glob("*")] if downloads.exists() else [],
-        "home_walk": []
-    }
+    files = []
+    if os.path.exists(downloads):
+        files.append(f"\n[Downloads]\n" + "\n".join(os.listdir(downloads)))
+    if os.path.exists(home):
+        files.append(f"\n[Home Directory]\n" + "\n".join(os.listdir(home)[:20]))  # limit output
 
-    for root, dirs, files in os.walk(home):
-        for file in files:
-            results["home_walk"].append(str(Path(root) / file))
-        # stop after 50 files to avoid overload
-        if len(results["home_walk"]) > 50:
-            break
-
-    return results
+    return "\n".join(files)
 
 
 def running_processes():
-    """List all running processes"""
     processes = []
-    for proc in psutil.process_iter(['pid', 'name', 'username']):
-        try:
-            processes.append(proc.info)
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            pass
-    return processes
+    for proc in psutil.process_iter(attrs=['pid', 'name']):
+        processes.append(f"{proc.info['pid']} - {proc.info['name']}")
+    return "\n".join(processes[:30])  # limit to 30 for readability
 
 
 def usb_detection():
-    """List connected USB storage devices"""
-    usb_devices = []
+    usb_list = []
     partitions = psutil.disk_partitions(all=False)
     for p in partitions:
-        if 'removable' in p.opts or 'cdrom' in p.opts:
-            usb_devices.append({"device": p.device, "mountpoint": p.mountpoint, "fstype": p.fstype})
-    return usb_devices
+        if "removable" in p.opts or "cdrom" in p.opts:
+            usb_list.append(f"{p.device} - {p.mountpoint}")
+    return "\n".join(usb_list) if usb_list else "No USB devices detected."
 
 
 def screenshot():
-    """Capture a screenshot and save as PNG"""
-    file_name = f"screenshot_{int(time.time())}.png"
-    image = ImageGrab.grab()
-    image.save(file_name)
-    return {"screenshot_file": file_name}
+    tmp_file = os.path.join(tempfile.gettempdir(), "screenshot.png")
+    img = pyautogui.screenshot()
+    img.save(tmp_file)
+    return f"Screenshot saved at {tmp_file}"
 
 
-def exif_data(image_path):
-    """Extract EXIF metadata from an image"""
-    metadata = {}
+def exif_data(image_path="sample.jpg"):
+    if not os.path.exists(image_path):
+        return f"Image {image_path} not found."
     try:
         img = Image.open(image_path)
-        exif_data = img._getexif()
-        if exif_data:
-            for tag, value in exif_data.items():
-                decoded = ExifTags.TAGS.get(tag, tag)
-                metadata[decoded] = str(value)
+        exif = img._getexif()
+        if not exif:
+            return "No EXIF metadata found."
+        return "\n".join([f"{TAGS.get(tag)}: {value}" for tag, value in exif.items() if tag in TAGS])
     except Exception as e:
-        metadata["error"] = str(e)
-    return metadata
+        return f"Error reading EXIF: {e}"
 
 
 def network_scan():
-    """Simulate a local network scan (ping 192.168.1.x)"""
-    live_hosts = []
-    base_ip = "192.168.1."
-    for i in range(1, 10):  # keep it small for demo
-        ip = base_ip + str(i)
-        try:
-            result = subprocess.run(["ping", "-n", "1", ip], capture_output=True)
-            if result.returncode == 0:
-                live_hosts.append(ip)
-        except Exception:
-            pass
-    return {"live_hosts": live_hosts}
+    try:
+        hosts = []
+        ip_base = ".".join(socket.gethostbyname(socket.gethostname()).split(".")[:-1]) + "."
+        for i in range(1, 10):  # scan first 10 IPs for demo
+            ip = ip_base + str(i)
+            result = subprocess.run(["ping", "-n", "1", "-w", "200", ip],
+                                    capture_output=True, text=True)
+            if "TTL=" in result.stdout:
+                hosts.append(ip)
+        return "\n".join(hosts) if hosts else "No live hosts detected."
+    except Exception as e:
+        return f"Error scanning network: {e}"
 
 
-def upload_simulation(data):
-    """Simulate sending data to a server"""
+def upload_demo():
+    return "Simulated upload: [Payload data would be sent to server here]"
+
+
+# --- Payload Registry ---
+PAYLOADS = {
+    "system_info": ("System Info", system_info),
+    "file_access": ("File Access", file_access),
+    "processes": ("Running Processes", running_processes),
+    "usb": ("USB Detection", usb_detection),
+    "screenshot": ("Screenshot", screenshot),
+    "exif": ("EXIF Data", exif_data),
+    "network": ("Network Scan", network_scan),
+    "upload": ("Upload (Demo)", upload_demo),
+}
+
+
+def list_payloads():
+    lines = []
+    for key, (desc, _) in PAYLOADS.items():
+        lines.append(f"{key:12} - {desc}")
+    return "\n".join(lines)
+
+
+def run_payload(name):
+    if name not in PAYLOADS:
+        raise ValueError(f"Unknown payload: {name}")
+    return PAYLOADS[name][1]()
