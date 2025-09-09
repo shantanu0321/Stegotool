@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="stegotool",
-    version="2.0",
+    version="1.0.0",
     packages=find_packages(),
     install_requires=[
         "pillow",
@@ -15,5 +15,5 @@ setup(
     },
     license="MIT",
     description="StegoTool - Educational Steganography and Payload Simulator",
-    author="Your Name",
+    author="Shantanu Raj Verma",
 )
