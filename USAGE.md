@@ -4,17 +4,6 @@ This guide explains **step-by-step how to use StegoTool** for hiding messages, e
 
 ---
 
-## Quick Command Cheat Sheet ⚡
-
-| Action                     | Command Example |
-|-----------------------------|----------------|
-| Hide a message in an image  | `python -m stegotool.cli hide -i input.png -m "Secret" -o output.png` |
-| Extract a message           | `python -m stegotool.cli extract -i output.png` |
-| List available payloads     | `python -m stegotool.cli payload --list` |
-| Run a payload               | `python -m stegotool.cli payload --type system_info` |
-
----
-
 ### 1. Installation
 
 Clone the repository and install dependencies:
@@ -127,8 +116,14 @@ Make sure Python 3.10+ is installed for proper compatibility.
 
 ---
 
-### 8. Contributing
-Fork the repo and submit a PR.
+## Quick Command Cheat Sheet ⚡
+
+| Action                     | Command Example |
+|-----------------------------|----------------|
+| Hide a message in an image  | `python -m stegotool.cli hide -i input.png -m "Secret" -o output.png` |
+| Extract a message           | `python -m stegotool.cli extract -i output.png` |
+| List available payloads     | `python -m stegotool.cli payload --list` |
+| Run a payload               | `python -m stegotool.cli payload --type system_info` |
 
 Report bugs or request features via GitHub issues.
 
