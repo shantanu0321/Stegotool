@@ -1,63 +1,47 @@
 import argparse
-import json
-from stegotool import payload
+from stegotool import hide, extract, payload
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="StegoTool v2 - Educational Payload Demonstration"
-    )
+    parser = argparse.ArgumentParser(prog="stegotool", description="StegoTool CLI")
+    subparsers = parser.add_subparsers(dest="command", required=True)
 
-    parser.add_argument(
-        "run_payload",
-        help="Specify the payload type to run",
-        choices=[
-            "system",
-            "files",
-            "processes",
-            "usb",
-            "screenshot",
-            "exif",
-            "scan",
-            "upload",
-        ],
-    )
+    # Hide command
+    hide_parser = subparsers.add_parser("hide", help="Hide a message or file in an image")
+    hide_parser.add_argument("-i", "--input", required=True, help="Input image path")
+    hide_parser.add_argument("-m", "--message", help="Message to hide")
+    hide_parser.add_argument("-f", "--file", help="File to hide")
+    hide_parser.add_argument("-o", "--output", required=True, help="Output image path")
 
-    parser.add_argument(
-        "--image",
-        help="Image path for EXIF data extraction (required for 'exif' payload)"
-    )
+    # Extract command
+    extract_parser = subparsers.add_parser("extract", help="Extract hidden data from an image")
+    extract_parser.add_argument("-i", "--input", required=True, help="Input image path")
+    extract_parser.add_argument("-o", "--output", help="Output file (optional)")
 
-    parser.add_argument(
-        "--data",
-        help="JSON string for upload simulation (required for 'upload' payload)"
-    )
+    # Payload command
+    payload_parser = subparsers.add_parser("payload", help="Run or list payloads")
+    payload_parser.add_argument("--list", action="store_true", help="List available payloads")
+    payload_parser.add_argument("--type", help="Run a specific payload")
+
+    # NEW: Embed payload directly into image
+    embed_parser = subparsers.add_parser("embed-payload", help="Run a payload and embed its output into an image")
+    embed_parser.add_argument("--type", required=True, help="Payload type to run")
+    embed_parser.add_argument("-i", "--input", required=True, help="Input image path")
+    embed_parser.add_argument("-o", "--output", required=True, help="Output image path")
 
     args = parser.parse_args()
 
-    # Run selected payload
-    if args.run_payload == "exif":
-        if not args.image:
-            print("❌ Please provide --image for EXIF payload")
-            return
-        result = payload.exif_data(args.image)
+    if args.command == "hide":
+        hide.hide_data(args.input, args.output, message=args.message, file_path=args.file)
 
-    elif args.run_payload == "upload":
-        if not args.data:
-            print("❌ Please provide --data for upload simulation")
-            return
-        try:
-            data = json.loads(args.data)
-        except json.JSONDecodeError:
-            print("❌ Invalid JSON format in --data")
-            return
-        result = payload.upload_simulation(data)
+    elif args.command == "extract":
+        extract.extract_data(args.input, args.output)
 
-    else:
-        func = payload.PAYLOADS[args.run_payload]
-        result = func()
+    elif args.command == "payload":
+        if args.list:
+            payload.list_payloads()
+        elif args.type:
+            payload.run_payload(args.type)
 
-    print(json.dumps(result, indent=4))
-
-
-if __name__ == "__main__":
-    main()
+    elif args.command == "embed-payload":
+        data = payload.run_payload(args.type, return_output=True)
+        hide.hide_data(args.input, args.output, message=data)
