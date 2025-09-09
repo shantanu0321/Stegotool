@@ -1,4 +1,4 @@
-# StegoTool v2
+# StegoTool 
 
 A command-line steganography tool for hiding files in images **and simulating payload attacks** .
 
@@ -23,7 +23,7 @@ pip install .
 ```
 
 ## Usage
-```bash
+```
 stegotool run-payload --system
 stegotool run-payload --files
 stegotool run-payload --processes
