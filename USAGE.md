@@ -44,11 +44,10 @@ Copy code
 
 Hide a payload inside aan image.
 
-Copy code 
-`python -m stegotool.cli embed-payload --type "payload name" -i <input_image> -o <output.image>`
+Copy code `python -m stegotool.cli embed-payload --type "payload name" -i <input_image> -o <output.image>`
 
-Example:
-`python -m stegotool.cli embed-payload --type system_info -i original.png -o output.png`
+
+Example:`python -m stegotool.cli embed-payload --type system_info -i original.png -o output.png`
 
 `--type` → Payload Name
 
