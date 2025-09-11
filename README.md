@@ -2,6 +2,8 @@
 
 A command-line steganography tool for hiding files in images **and simulating payload attacks** .
 
+---
+
 ## Features
 - Hide any file inside PNG/JPG images
 - Extract hidden files
@@ -15,6 +17,8 @@ A command-line steganography tool for hiding files in images **and simulating pa
     - 🌐 Network Scan
     - 🚨 Upload Simulation
 
+---
+
 ## Install
 ```bash
 git clone https://github.com/shantanu0321/stegotool.git
@@ -22,19 +26,9 @@ cd stegotool
 pip install .
 ```
 
-## Usage
-```
-stegotool run-payload --system
-stegotool run-payload --files
-stegotool run-payload --processes
-stegotool run-payload --usb
-stegotool run-payload --screenshot
-stegotool run-payload --exif example.jpg
-stegotool run-payload --scan
-stegotool run-payload --upload
-```
+---
 
-⚠️ Disclaimer: 
+## ⚠️ Disclaimer: 
 
 This tool is developed strictly for educational and research purposes only. The author(s) of this tool shall not be held responsible or liable for any misuse, illegal activities, or damages caused by the use of this tool.
 
