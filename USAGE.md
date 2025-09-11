@@ -10,8 +10,15 @@ Clone the repository and install dependencies:
 
 ```
 git clone https://github.com/shantanu0321/Stegotool.git
+
 cd Stegotool
+
+python -m venv venv
+
+.\venv\Scripts\activate.bat
+
 pip install -r requirements.txt
+
 ```
 
 ---
@@ -33,6 +40,17 @@ Copy code
 `-m` → Message to hide
 
 `-o` → Output image file
+
+
+Hide a payload inside aan image.
+
+Copy code 
+`python -m stegotool.cli embed-payload --type "payload name" -i <input_image> -o <output.image>`
+
+Example:
+`python -m stegotool.cli embed-payload --type system_info -i original.png -o output.png`
+
+`--type` → Payload Name
 
 ---
 
@@ -65,11 +83,9 @@ Copy code
 | System Info        | OS, IP, hostname                          |
 | File Access        | Downloads folder, home directory walk     | 
 | Running Processes  | Lists all running system processes        |
-| USB Detection      | Lists connected USB storage               | 
 | Screenshot         | Captures current screen and saves as PNG  | 
-| EXIF Data          | Extracts metadata from images             | 
 | Network Scan       | Scans local network for live hosts        | 
-| Upload (Demo)      | Simulates sending data to your server     | 
+
 ---
 
 ### 5. Run a Payload
