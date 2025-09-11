@@ -139,6 +139,8 @@ Make sure Python 3.10+ is installed for proper compatibility.
 | Extract a message           | `python -m stegotool.cli extract -i output.png` |
 | List available payloads     | `python -m stegotool.cli payload --list` |
 | Run a payload               | `python -m stegotool.cli payload --type system_info` |
+| Hide a payloads in a image  | `python -m stegotool.cli embed-payload --all -i input.png -o out.png` |
+|Extract the payload          | `python -m stegotool.cli extract-payload -i out.png` |
 
 Report bugs or request features via GitHub issues.
 
