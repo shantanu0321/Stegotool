@@ -19,9 +19,16 @@ A command-line steganography tool for hiding files in images **and simulating pa
 
 ## Install
 ```bash
-git clone https://github.com/shantanu0321/stegotool.git
-cd stegotool
-pip install .
+git clone https://github.com/shantanu0321/Stegotool.git
+
+cd Stegotool
+
+python -m venv venv
+
+.\venv\Scripts\activate.bat
+
+pip install -r requirements.txt
+
 ```
 
 ---
