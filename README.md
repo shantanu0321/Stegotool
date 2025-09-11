@@ -11,11 +11,9 @@ A command-line steganography tool for hiding files in images **and simulating pa
     - 🧠 System Info
     - 📂 File Access
     - 📋 Running Processes
-    - 💾 USB Detection
     - 🖼 Screenshot
-    - 🧬 EXIF Metadata Extraction
     - 🌐 Network Scan
-    - 🚨 Upload Simulation
+    
 
 ---
 
