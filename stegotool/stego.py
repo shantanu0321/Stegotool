@@ -1,78 +1,70 @@
 # stegotool/stego.py
-from PIL import Image
-import math
 
-def _text_to_bits(text: str) -> str:
+from PIL import Image
+
+
+def _text_to_binary(text):
     return ''.join(format(ord(c), '08b') for c in text)
 
-def _bits_to_text(bits: str) -> str:
-    chars = [bits[i:i+8] for i in range(0, len(bits), 8)]
-    text = ''
-    for b in chars:
-        if len(b) < 8:
-            break
-        ch = chr(int(b, 2))
-        if ch == '\0':  # terminator
-            break
-        text += ch
-    return text
 
-def hide_message(input_path: str, message: str, output_path: str) -> None:
-    """
-    Hide `message` string into the image at `input_path` and save to `output_path`.
-    Adds a null terminator '\0' to mark the end of the message.
-    """
+def _binary_to_text(binary):
+    chars = [binary[i:i+8] for i in range(0, len(binary), 8)]
+    return ''.join(chr(int(b, 2)) for b in chars)
+
+
+def hide_message(input_path, output_path, message):
     img = Image.open(input_path)
-    if img.mode not in ('RGB', 'RGBA'):
-        img = img.convert('RGB')
+    encoded = img.copy()
 
-    width, height = img.size
-    max_bytes = width * height * 3 // 8  # approx
-    message_with_term = message + '\0'
-    if len(message_with_term) > max_bytes:
-        raise ValueError(f"Message too large to hide in this image (max {max_bytes} chars).")
+    binary_message = _text_to_binary(message)
+    binary_message += '1111111111111110'  # EOF marker
 
-    bitstream = _text_to_bits(message_with_term)
-    pixels = list(img.getdata())
-    new_pixels = []
+    if img.mode != 'RGB':
+        raise ValueError("Image must be in RGB mode")
+
+    data = list(encoded.getdata())
+    data_len = len(data)
+    pixel_index = 0
     bit_index = 0
-    total_bits = len(bitstream)
 
-    for pix in pixels:
-        r, g, b = pix[:3]
-        r = (r & ~1) | (int(bitstream[bit_index]) if bit_index < total_bits else r & 1)
-        bit_index += 1 if bit_index < total_bits else 0
+    for pixel in data:
+        if bit_index >= len(binary_message):
+            break
 
-        g = (g & ~1) | (int(bitstream[bit_index]) if bit_index < total_bits else g & 1)
-        bit_index += 1 if bit_index < total_bits else 0
+        r, g, b = pixel
+        new_rgb = []
 
-        b = (b & ~1) | (int(bitstream[bit_index]) if bit_index < total_bits else b & 1)
-        bit_index += 1 if bit_index < total_bits else 0
+        for color in (r, g, b):
+            if bit_index < len(binary_message):
+                lsb = int(binary_message[bit_index])
+                new_color = (color & ~1) | lsb
+                new_rgb.append(new_color)
+                bit_index += 1
+            else:
+                new_rgb.append(color)
 
-        if len(pix) == 4:
-            new_pixels.append((r, g, b, pix[3]))
-        else:
-            new_pixels.append((r, g, b))
+        data[pixel_index] = tuple(new_rgb)
+        pixel_index += 1
 
-    encoded = Image.new(img.mode, img.size)
-    encoded.putdata(new_pixels)
+    if bit_index < len(binary_message):
+        raise ValueError("Message too long to hide in image.")
+
+    encoded.putdata(data)
     encoded.save(output_path)
 
-def extract_message(input_path: str) -> str:
-    """
-    Extract hidden text from `input_path`. Stops at null terminator.
-    """
-    img = Image.open(input_path)
-    if img.mode not in ('RGB', 'RGBA'):
-        img = img.convert('RGB')
 
-    pixels = list(img.getdata())
-    bits = ''
-    for pix in pixels:
-        r, g, b = pix[:3]
-        bits += str(r & 1)
-        bits += str(g & 1)
-        bits += str(b & 1)
+def extract_message(image_path):
+    img = Image.open(image_path)
+    binary_data = ""
+    for pixel in img.getdata():
+        for color in pixel[:3]:  # Only use RGB
+            binary_data += str(color & 1)
 
-    text = _bits_to_text(bits)
-    return text
+    eof_marker = '1111111111111110'
+    eof_index = binary_data.find(eof_marker)
+
+    if eof_index == -1:
+        raise ValueError("No hidden message found.")
+
+    binary_message = binary_data[:eof_index]
+    return _binary_to_text(binary_message)
