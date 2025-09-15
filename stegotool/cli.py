@@ -2,7 +2,7 @@
 
 import argparse
 import os
-from .payload import PAYLOADS, run_payload, list_payloads, run_all_payloads
+from .payload import PAYLOADS, run_payload, run_all_payloads
 from .stego import hide_message, extract_message
 
 
@@ -12,29 +12,30 @@ def main():
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    # ---- Run single payload ----
+    # ---- Run a specific payload ----
     run_parser = subparsers.add_parser("run-payload", help="Run a specific payload")
     run_parser.add_argument("--type", required=True, choices=PAYLOADS.keys(), help="Payload type")
-    run_parser.add_argument("--folder-path", help="Path for folder_listing payload")
-    run_parser.add_argument("--image-path", help="Image path for exif payload")
+    run_parser.add_argument("--folder-path", help="For folder_listing payload")
+    run_parser.add_argument("--image-path", help="For exif payload")
 
     # ---- Embed payload ----
     embed_parser = subparsers.add_parser("embed-payload", help="Embed payload(s) into an image")
     embed_parser.add_argument("--type", choices=PAYLOADS.keys(), help="Payload type")
-    embed_parser.add_argument("--all", action="store_true", help="Run all payloads")
-    embed_parser.add_argument("--folder-path", help="Path for folder_listing payload")
-    embed_parser.add_argument("--image-path", help="Image path for exif payload")
+    embed_parser.add_argument("--all", action="store_true", help="Embed all payloads")
+    embed_parser.add_argument("--folder-path", help="For folder_listing payload")
+    embed_parser.add_argument("--image-path", help="For exif payload")
     embed_parser.add_argument("-i", "--input", required=True, help="Input image path")
     embed_parser.add_argument("-o", "--output", required=True, help="Output image path")
 
     # ---- Extract payload ----
-    extract_parser = subparsers.add_parser("extract-payload", help="Extract hidden payload from an image")
+    extract_parser = subparsers.add_parser("extract-payload", help="Extract hidden payload from image")
     extract_parser.add_argument("-i", "--input", required=True, help="Stego image path")
+    extract_parser.add_argument("-o", "--output", required=True, help="Save extracted data to file")
 
     args = parser.parse_args()
 
     # ----------------------------
-    # Run a single payload
+    # Run single payload
     # ----------------------------
     if args.command == "run-payload":
         kwargs = {}
@@ -47,7 +48,7 @@ def main():
         print(f"[+] Payload result ({args.type}):\n{result}")
 
     # ----------------------------
-    # Embed one or all payloads into image
+    # Embed payload(s)
     # ----------------------------
     elif args.command == "embed-payload":
         kwargs = {
@@ -62,13 +63,6 @@ def main():
             for key, output in results.items():
                 combined.append(f"=== {key.upper()} ===\n{output}\n")
             final_message = "\n".join(combined)
-
-            # Save to file
-            txt_file = os.path.splitext(args.output)[0] + "_payloads_output.txt"
-            with open(txt_file, "w", encoding="utf-8") as f:
-                f.write(final_message)
-            print(f"[+] All payload results saved to {txt_file}")
-
         else:
             if not args.type:
                 print("[!] Error: You must specify --type or --all")
@@ -83,20 +77,22 @@ def main():
             result = run_payload(args.type, **payload_kwargs)
             final_message = f"=== {args.type.upper()} ===\n{result}"
 
-        # Embed into image
+        # Embed data into image
         try:
             hide_message(args.input, args.output, final_message)
-            print(f"[+] Payload embedded into {args.output}")
+            print(f"[+] Payload embedded into image: {args.output}")
         except Exception as e:
             print(f"[!] Failed to embed payload: {e}")
 
     # ----------------------------
-    # Extract from image
+    # Extract payload
     # ----------------------------
     elif args.command == "extract-payload":
         try:
             message = extract_message(args.input)
-            print(f"[+] Extracted message:\n{message}")
+            with open(args.output, "w", encoding="utf-8") as f:
+                f.write(message)
+            print(f"[+] Extracted message saved to: {args.output}")
         except Exception as e:
             print(f"[!] Failed to extract message: {e}")
 
