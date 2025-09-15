@@ -136,11 +136,11 @@ Make sure Python 3.10+ is installed for proper compatibility.
 | Action                     | Command Example |
 |-----------------------------|----------------|
 | Hide a message in an image  | `python -m stegotool.cli hide -i input.png -m "Secret" -o output.png` |
-| Extract a message           | `python -m stegotool.cli extract -i output.png` |
+| Extract a message           | `python -m stegotool.cli extract -i output.png -o output.txt` |
 | List available payloads     | `python -m stegotool.cli payload --list` |
 | Run a payload               | `python -m stegotool.cli payload --type system_info` |
 | Hide a payloads in a image  | `python -m stegotool.cli embed-payload --all -i input.png -o out.png` |
-|Extract the payload          | `python -m stegotool.cli extract-payload -i out.png` |
+|Extract the payload          | `python -m stegotool.cli extract-payload -i out.png -o output.txt` |
 
 Report bugs or request features via GitHub issues.
 
