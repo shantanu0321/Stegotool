@@ -1,6 +1,6 @@
 # StegoTool 
 
-A command-line steganography tool for hiding files in images **and simulating payload attacks** .
+A command-line steganography tool for hiding files in images **and simulating payload attacks** for Windows .
 
 ---
 
