@@ -46,3 +46,8 @@ This tool must only be used for ethical hacking, penetration testing (with prope
 Any malicious or unauthorized usage is strictly prohibited and is the sole responsibility of the user.
 
 By downloading, installing, or using this tool, you acknowledge that you have read and understood this license and disclaimer.
+
+
+---
+ 
+# If this project impressed you, consider starring the repository ⭐
